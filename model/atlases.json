@@ -1,0 +1,12 @@
+{
+	"sources": [
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/build_banner_cosmo" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/frogstone" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/frogwater" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/frogwater.mcmeta" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/oak" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/oaklog" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/oakplant" },
+		{ "type": "single", "resource": "magic_store:furnitures/summer_001/scarecrow" }
+	]
+}
