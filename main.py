@@ -2,18 +2,22 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-versions = ["1.17.1", "1.18", "1.18.1", "1.18.2", "1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4", "1.20", "1.20.1", "1.20.2"]
+versions = ["1.17.1", "1.18", "1.18.1", "1.18.2", "1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4", "1.20", "1.20.1",
+            "1.20.2"]
 
-functions = []
+obfuscated_functions = []
+forge_functions = []
 
 mojang_pattern = r'Mojang ([a-zA-Z0-9_]+)(.*+)'
+obfuscated_pattern = r'Obfuscated ([a-zA-Z0-9_]+)(.*+)'
 forge_pattern = r'Searge \(Forge\) ([a-zA-Z0-9_]+)(.*+)'
 
-search_function_name = "contains"
-max_argument_size = 1
+search_function_name = "getDescriptionId"
+argument_size = 1
 
-def printFunction(version):
-    r = requests.get(f'https://nms.screamingsandals.org/{version}/net/minecraft/nbt/CompoundTag.html')
+
+def printFunction(version_text):
+    r = requests.get(f'https://nms.screamingsandals.org/{version_text}/net/minecraft/world/item/Item.html')
     html_doc = r.text
 
     soup = BeautifulSoup(html_doc, 'html.parser')
@@ -23,9 +27,11 @@ def printFunction(version):
         lis = uls[loop].findAll("li")
 
         mojang_li = next(filter(lambda li: 'Mojang' in li.text, lis), None).text
+        obfuscated_li = next(filter(lambda li: 'Obfuscated' in li.text, lis), None).text
         forge_li = next(filter(lambda li: 'Forge' in li.text, lis), None).text
 
         mojang_match = re.search(mojang_pattern, mojang_li)
+        obfuscated_match = re.search(obfuscated_pattern, obfuscated_li)
         forge_match = re.search(forge_pattern, forge_li)
 
         if mojang_match:
@@ -34,32 +40,56 @@ def printFunction(version):
                 continue
             mojang_function_argument_text = mojang_match.group(2)
             mojang_function_arguments = mojang_function_argument_text.split(", ")
-            if len(mojang_function_arguments) > max_argument_size:
+            if "()" in mojang_function_argument_text and argument_size == 1:
+                continue
+            if len(mojang_function_arguments) > argument_size:
                 continue
             mojang_text = f"{mojang_function_name}{mojang_match.group(2)}"
         else:
             continue
-        if forge_match:
-            forge_text = f"{forge_match.group(1)}{forge_match.group(2)}"
+        if obfuscated_match:
+            obfuscated_function_name = obfuscated_match.group(1)
+            obfuscated_functions.append(obfuscated_function_name)
+            obfuscated_text = f"{obfuscated_function_name}{obfuscated_match.group(2)}"
         else:
             continue
-        functions.append(forge_text)
+        if forge_match:
+            forge_function_name = forge_match.group(1)
+            forge_functions.append(forge_function_name)
+            forge_text = f"{forge_function_name}{forge_match.group(2)}"
+        else:
+            continue
         print(f"[{version}] {mojang_text}")
+        print(f"         └ {obfuscated_text}")
         print(f"         └ {forge_text}")
         print("")
 
-#printFunction("1.17.1")
+
+# printFunction("1.17.1")
 for version in versions:
     printFunction(version)
 
-print("")
-if all(x == functions[0] for x in functions):
-    print("모든 요소가 같습니다.")
-else:
-    print("요소가 같지 않습니다.")
 
-def printFunction2(version):
-    r = requests.get(f'https://nms.screamingsandals.org/{version}/net/minecraft/nbt/CompoundTag.html')
+def isEveryEqual(input_list):
+    if all(x == input_list[0] for x in input_list):
+        return True
+    else:
+        return False
+
+
+print("")
+if isEveryEqual(obfuscated_functions):
+    print("[Obfuscated] 모든 요소가 같습니다.")
+else:
+    print("[Obfuscated] 모든 요소가 같지 않습니다.")
+if isEveryEqual(forge_functions):
+    print("[Forge] 모든 요소가 같습니다.")
+else:
+    print("[Forge] 모든 요소가 같지 않습니다.")
+
+
+def printFunction2(version2):
+    r = requests.get(f'https://nms.screamingsandals.org/{version2}/net/minecraft/nbt/CompoundTag.html')
     html_doc = r.text
 
     soup = BeautifulSoup(html_doc, 'html.parser')
@@ -85,6 +115,6 @@ def printFunction2(version):
             function = forge_match.group(1)
             if forge_function != function:
                 continue
-            functions.append(function)
+            forge_functions.append(function)
             print(f"[{version}] {function}")
             print("")
